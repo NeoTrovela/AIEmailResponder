@@ -8,17 +8,19 @@ API_URL = "https://your-api-gateway-url"  # replace with actual API Gateway URL
 
 def main():
     print("AI Email Responder")
-    email_text = input("Paste the email content:\n")
-    tone = input("Choose tone (formal, casual, apologetic): ").strip().lower()
+    print("Paste email content> ")
+    email_text = input()
+    print("Choose tone (formal, casual, apologetic, etc.)> ")
+    tone = input().strip().lower()
 
     payload = {"email": email_text, "tone": tone}
     response = requests.post(API_URL, json=payload)
 
-    if response.status_code == 200:
+    if response.status_code == 200: # success
         data = response.json()
-        print("\n📝 AI-Generated Response:\n")
+        print("\nAI-Generated Response:\n")
         print(data["reply"])
-    else:
+    else: # error code
         print("Error with code:", response.status_code)
         print(response.text)
 
