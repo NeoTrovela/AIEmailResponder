@@ -174,20 +174,6 @@ def web_service_post(url, data):
         logging.error(e)
         return None
   
-def prompt():
-    """
-    Prompts the user and returns the command number
-
-    Parameters
-    ----------
-    None
-
-    Returns
-    -------
-    Command number entered by user (0, 1, 2, ...)
-    """
-    
-  
 
 API_URL = "https://your-api-gateway-url"  # replace with actual API Gateway URL
 
