@@ -6,6 +6,9 @@ import jsons  # relational-object mapping
 
 import logging
 import time
+import os
+
+import openai
 
 ###################################################################
 #
@@ -174,8 +177,39 @@ def web_service_post(url, data):
         logging.error(e)
         return None
   
+API_KEY = os.getenv("OPENAI_API_KEY")
+openai.api_key = API_KEY
 
-API_URL = "https://your-api-gateway-url"  # replace with actual API Gateway URL
+def generate_response(email, tone):
+    """
+    Sends a request to OpenAI's API to generate an AI-powered email response.
+
+    Parameters
+    ----------
+    email_text : The input email text (str)
+    tone : The desired tone of the response (formal, casual, apologetic, etc.) (str)
+
+    Returns
+    -------
+    AI-generated email response (str)
+    """
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": f"You're an AI email assistant. Respond to this email in a {tone} tone."},
+                {"role": "user", "content": email}
+            ],
+            api_key=API_KEY
+        )
+        
+        # get response text
+        return response["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        print("Error:", e)
+        return None
 
 def main():
     print("AI Email Responder")
@@ -184,16 +218,25 @@ def main():
     print("Choose tone (formal, casual, apologetic, etc.)> ")
     tone = input().strip().lower()
 
-    payload = {"email": email_text, "tone": tone}
-    response = requests.post(API_URL, json=payload)
+    response = generate_response(email_text, tone)
 
-    if response.status_code == 200: # success
-        data = response.json()
-        print("\nAI-Generated Response:\n")
-        print(data["reply"])
-    else: # error code
-        print("Error with code:", response.status_code)
-        print(response.text)
+    if response:
+        print("**AI Generated Response**")
+        print(response)
+    else:
+        print("**ERROR**")
+        print("Failed to generate response :(")
+
+    #payload = {"email": email_text, "tone": tone}
+    #response = web_service_post(API_KEY, json=payload)
+
+    #if response.status_code == 200: # success
+    #    data = response.json()
+    #    print("\nAI-Generated Response:\n")
+    #    print(data["reply"])
+    #else: # error code
+    #    print("Error with code:", response.status_code)
+    #    print(response.text)
 
 if __name__ == "__main__":
     main()
