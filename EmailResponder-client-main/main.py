@@ -195,17 +195,17 @@ def generate_response(email, tone):
     """
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
+        client = openai.OpenAI(api_key=API_KEY)
+        response = client.chat.completions.create(
+            model="gpt-3.5",
             messages=[
                 {"role": "system", "content": f"You're an AI email assistant. Respond to this email in a {tone} tone."},
                 {"role": "user", "content": email}
-            ],
-            api_key=API_KEY
+            ]
         )
         
         # get response text
-        return response["choices"][0]["message"]["content"]
+        return response.choices[0]["message"]["content"]
 
     except Exception as e:
         print("Error:", e)

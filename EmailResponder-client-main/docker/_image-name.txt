@@ -1,1 +1,1 @@
-AIEmailResponder
+aiemailresponder

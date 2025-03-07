@@ -1,5 +1,5 @@
 # change prompt:
-PS1="project02-client> "
+PS1="aiemailresponder-client> "
 
 # change path to allow execution from current directory:
 export PATH=.:$PATH
