@@ -197,7 +197,7 @@ def generate_response(email, tone):
     try:
         client = openai.OpenAI(api_key=API_KEY)
         response = client.chat.completions.create(
-            model="gpt-3.5",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": f"You're an AI email assistant. Respond to this email in a {tone} tone."},
                 {"role": "user", "content": email}
