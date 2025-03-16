@@ -7,8 +7,13 @@ const { Configuration, OpenAIApi } = require('openai');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+const config = require('./config.js');
+const emailresponder_db = require('./emailresponder_db.js')
+
 const app = express();
 app.use(bodyParser.json());
+
+var startTime; // time variable
 
 const OpenAI = require("openai");
 
@@ -29,6 +34,38 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+//
+// web service functions
+//
+let generate = require('./api_generate.js');
+let history = require('./api_history.js');
+
+//
+// request for default page
+//
+app.get('/', (req, res) => {
+  try {
+    console.log("**Call to /...");
+    
+    let uptime = Math.round((Date.now() - startTime) / 1000);
+
+    res.json({
+      "status": "running",
+      "uptime-in-secs": uptime,
+      "dbConnection": photoapp_db.state
+    });
+  }
+  catch(err) {
+    console.log("**Error in /");
+    console.log(err.message);
+
+    res.status(500).json(err.message);
+  }
+});
+
+app.post('/generate', generate.post_generation);
+app.get('/history', history.get_history);
 
 // endpoint to generate a response and store it in MySQL RDS
 app.post('/generate', async (req, res) => {
