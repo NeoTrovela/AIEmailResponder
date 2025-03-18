@@ -18,13 +18,13 @@ var startTime; // time variable
 const OpenAI = require("openai");
 
 // Initialize OpenAI API client
-const openai = new OpenAI({
+/*const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-});
+});*/
 
 
 // setup MySQL connection
-const pool = mysql.createPool({
+/*const pool = mysql.createPool({
   host: process.env.DATABASE_HOST,        
   user: process.env.DATABASE_USER,        
   password: process.env.DATABASE_PASSWORD, 
@@ -33,6 +33,18 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+});*/
+
+//
+// main():
+//
+app.listen(config.service_port, () => {
+  startTime = Date.now();
+  console.log('**Web service running, listening on port', config.service_port);
+  //
+  // Configure AWS to use our config file:
+  //
+  //process.env.AWS_SHARED_CREDENTIALS_FILE = config.photoapp_config;
 });
 
 //
@@ -53,7 +65,7 @@ app.get('/', (req, res) => {
     res.json({
       "status": "running",
       "uptime-in-secs": uptime,
-      "dbConnection": photoapp_db.state
+      "dbConnection": emailresponder_db.state
     });
   }
   catch(err) {
@@ -67,6 +79,7 @@ app.get('/', (req, res) => {
 app.post('/generate', generate.post_generation);
 app.get('/history', history.get_history);
 
+/*
 // endpoint to generate a response and store it in MySQL RDS
 app.post('/generate', async (req, res) => {
   const { email, tone } = req.body;
@@ -129,3 +142,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+*/

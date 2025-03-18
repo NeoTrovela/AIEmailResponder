@@ -8,6 +8,8 @@ import logging
 import time
 import os
 
+from configparser import ConfigParser
+
 import openai
 
 ###################################################################
@@ -41,59 +43,6 @@ def web_service_get(url):
 
         while True:
             response = requests.get(url)
-            
-            if response.status_code in [200, 400, 500]:
-            #
-            # we consider this a successful call and response
-            #
-                break
-
-            #
-            # failed, try again?
-            #
-            retries = retries + 1
-            if retries < 3:
-            # try at most 3 times
-                time.sleep(retries)
-                continue
-                
-            #
-            # if get here, we tried 3 times, we give up:
-            #
-            break
-
-        return response
-
-    except Exception as e:
-        print("**ERROR**")
-        logging.error("web_service_get() failed:")
-        logging.error("url: " + url)
-        logging.error(e)
-        return None
-  
-def web_service_put(url, data):
-    """
-    Submits a PUT request to a web service at most 3 times, since 
-    web services can fail to respond e.g. to heavy user or internet 
-    traffic. If the web service responds with status code 200, 400 
-    or 500, we consider this a valid response and return the response.
-    Otherwise we try again, at most 3 times. After 3 attempts the 
-    function returns with the last response.
-
-    Parameters
-    ----------
-    url: url for calling the web service
-
-    Returns
-    -------
-    response received from web service
-    """
-
-    try:
-        retries = 0
-
-        while True:
-            response = requests.put(url, json=data)
             
             if response.status_code in [200, 400, 500]:
             #
@@ -177,10 +126,47 @@ def web_service_post(url, data):
         logging.error(e)
         return None
   
-API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = API_KEY
+#API_KEY = os.getenv("OPENAI_API_KEY")
+#openai.api_key = API_KEY
 
-def generate_response(email, tone):
+###################################################################
+#
+# prompt
+#
+def prompt():
+  """
+  Prompts the user and returns the command number
+  
+  Parameters
+  ----------
+  None
+  
+  Returns
+  -------
+  Command number entered by user (0, 1, 2, ...)
+  """
+
+  try:
+    print()
+    print(">> Enter a command:")
+    print("   0 => end")
+    print("   1 => generate response")
+    print("   2 => get history")
+
+    cmd = int(input())
+    return cmd
+
+  except Exception as e:
+    print("ERROR")
+    print("ERROR: invalid input")
+    print("ERROR")
+    return -1
+
+###################################################################
+#
+# generate response
+#
+def generate_response(baseurl):
     """
     Sends a request to OpenAI's API to generate an AI-powered email response.
 
@@ -195,17 +181,91 @@ def generate_response(email, tone):
     """
 
     try:
-        client = openai.OpenAI(api_key=API_KEY)
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": f"You're an AI email assistant. Respond to this email in a {tone} tone."},
-                {"role": "user", "content": email}
-            ]
-        )
+        print("Paste email content> ")
+        email_text = input()
+        print("Choose tone (formal, casual, apologetic, etc.)> ")
+        tone = input().strip().lower()
+
+        data = {"content": email_text, "tone": tone}
+
+        # calling webservice
+        api = '/generate'
+        url = baseurl + api
+
+        res = web_service_post(url, data)
+
+        if res.status_code != 200:
+            # failed:
+            print("Failed with status code:", res.status_code)
+            print("url: " + url)
+            return
+        
+        body = res.json()
+
+        response = body['reply']
+
+        if response:
+            print("**AI Generated Response**")
+            print(response)
+        else:
+            print("**ERROR**")
+            print("Failed to generate response :(")
+
+        return response
+
+        # client = openai.OpenAI(api_key=API_KEY)
+        # response = client.chat.completions.create(
+        #     model="gpt-4o-mini",
+        #     messages=[
+        #         {"role": "system", "content": f"You're an AI email assistant. Respond to this email in a {tone} tone."},
+        #         {"role": "user", "content": email}
+        #     ]
+        # )
         
         # get response text
-        return response.choices[0]["message"]["content"]
+        #return response.choices[0]["message"]["content"]
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+    
+###################################################################
+#
+# get history
+#
+def history(baseurl):
+    """
+    Sends a request to OpenAI's API to generate an AI-powered email response.
+
+    Parameters
+    ----------
+    email_text : The input email text (str)
+    tone : The desired tone of the response (formal, casual, apologetic, etc.) (str)
+
+    Returns
+    -------
+    AI-generated email response (str)
+    """
+
+    try:
+        print("**Fetching email history**")
+
+        # calling webservice
+        api = '/history'
+        url = baseurl + api
+
+        res = web_service_get(url)
+
+        if res.status_code != 200:
+            # failed:
+            print("Failed with status code:", res.status_code)
+            print("url: " + url)
+            return
+        
+        body = res.json()
+
+        response = body['history']
+        return response
 
     except Exception as e:
         print("Error:", e)
@@ -213,19 +273,28 @@ def generate_response(email, tone):
 
 def main():
     print("AI Email Responder")
-    print("Paste email content> ")
-    email_text = input()
-    print("Choose tone (formal, casual, apologetic, etc.)> ")
-    tone = input().strip().lower()
 
-    response = generate_response(email_text, tone)
+    configur = ConfigParser()
+    configur.read('emailresponder-client-config.ini')
+    baseurl = configur.get('client', 'webservice')
 
-    if response:
-        print("**AI Generated Response**")
-        print(response)
-    else:
-        print("**ERROR**")
-        print("Failed to generate response :(")
+    cmd = prompt()
+
+    while cmd != 0:
+        if cmd == 1:
+            generate_response(baseurl)
+        elif cmd == 2:
+            history(baseurl)
+        else:
+            print("** Unknown command, try again...")
+        #
+        cmd = prompt()
+
+    #
+    # done
+    #
+    print()
+    print('** done **')
 
     #payload = {"email": email_text, "tone": tone}
     #response = web_service_post(API_KEY, json=payload)
