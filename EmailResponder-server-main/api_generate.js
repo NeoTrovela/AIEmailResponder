@@ -36,7 +36,7 @@ exports.post_generation = async (req, res) => {
 
     } catch (error) {
         console.log("**Error in /generate:");
-        console.log(error);
+        console.log(error.message);
         res.status(500).json({error: 'Internal server error.'});
     }
 } // post

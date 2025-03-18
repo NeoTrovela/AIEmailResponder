@@ -32,7 +32,7 @@ exports.get_history = async (req, res) => {
 
     } catch (error) {
         console.log("**Error in /history:");
-        console.log(error);
+        console.log(error.message);
         res.status(500).json({ error: 'Internal server error.' });
     }
 } // get
