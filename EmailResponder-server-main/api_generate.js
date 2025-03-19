@@ -25,12 +25,13 @@ exports.post_generation = async (req, res) => {
               {role: "user", content: content}
             ],
         });
-        const responseText = aiResponse.data.choices[0].message.content;
+        //console.log(aiResponse.choices[0]);
+        const responseText = aiResponse.choices[0].message.content;
         
         // insert the email and its generated response into the MySQL database
         const insertQuery = 'INSERT INTO responses (email, tone, response, created_at) VALUES (?, ?, ?, NOW())';
         //await pool.execute(insertQuery, [email, tone, responseText]);
-        let insert_promise = await query_database(emailresponder_db_db, insertQuery, [content, tone, responseText]);
+        let insert_promise = await query_database(emailresponder_db, insertQuery, [content, tone, responseText]);
         
         res.status(200).json({'reply': responseText});
 
