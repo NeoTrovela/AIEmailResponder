@@ -7,11 +7,11 @@ const { query_database } = require('./utility.js');
 //
 exports.get_history = async (req, res) => {
     const { email, tone } = req.query;
-    let query = 'SELECT * FROM responses';
+    let query = 'SELECT * FROM responses WHERE tone = ?';
     const values = [];
     const conditions = [];
     
-    if (email) {
+    /*if (email) {
         conditions.push(`email LIKE ?`);
         values.push(`%${email}%`);
     }
@@ -21,7 +21,7 @@ exports.get_history = async (req, res) => {
     }
     if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
-    }
+    }*/ //do we need?
     query += ' ORDER BY created_at DESC';
     
     try {

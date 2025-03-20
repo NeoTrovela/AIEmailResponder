@@ -27,6 +27,7 @@ exports.post_generation = async (req, res) => {
         });
         //console.log(aiResponse.choices[0]);
         const responseText = aiResponse.choices[0].message.content;
+        //console.log(responseText);
         
         // insert the email and its generated response into the MySQL database
         const insertQuery = 'INSERT INTO responses (email, tone, response, created_at) VALUES (?, ?, ?, NOW())';
