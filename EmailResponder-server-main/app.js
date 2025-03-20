@@ -52,6 +52,7 @@ app.listen(config.service_port, () => {
 //
 let generate = require('./api_generate.js');
 let history = require('./api_history.js');
+let add_user = require('./api_user.js');
 
 //
 // request for default page
@@ -78,6 +79,7 @@ app.get('/', (req, res) => {
 
 app.post('/generate', generate.post_generation);
 app.get('/history', history.get_history);
+app.put('/user', add_user.put_user);
 
 /*
 // endpoint to generate a response and store it in MySQL RDS
