@@ -50,7 +50,7 @@ exports.put_user = async (req, res) => {
       INSERT INTO users (email, lastname, firstname) VALUES (?, ?, ?);
       `;
 
-      let insert_promise = query_database(photoapp_db, insert_sql, [data.email, data.lastname, data.firstname]);
+      let insert_promise = query_database(emailresponder_db, insert_sql, [data.email, data.lastname, data.firstname]);
       let insert_sql_results = await Promise.all([insert_promise]);
       //console.log(insert_sql_results);
 
