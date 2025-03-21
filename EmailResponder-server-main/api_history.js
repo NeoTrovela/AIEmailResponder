@@ -7,26 +7,26 @@ const { query_database } = require('./utility.js');
 //
 exports.get_history = async (req, res) => {
     console.log("**Call to get /history/:userid...");
+    try {
+        let user_id = req.params.userid;
 
-    let user_id = req.params.userid;
+        let sql = `
+            SELECT * FROM users WHERE userid = ?;
+            `;
 
-    let sql = `
-        SELECT * FROM users WHERE userid = ?;
-        `;
+        let sql_promise = query_database(emailresponder_db, sql, [user_id]);
+        let sql_result = await Promise.all([sql_promise]);
 
-    let sql_promise = query_database(emailresponder_db, sql, [user_id]);
-    let sql_result = await Promise.all([sql_promise]);
+        //console.log(sql_result);
 
-    //console.log(sql_result);
+        if(sql_result[0].length === 0){ // invalid user id
+            return res.status(400).json({
+                'reply': "No such user...",
+            });
+        }
 
-    if(sql_result[0].length === 0){ // invalid user id
-        return res.status(400).json({
-            "history": "No such user...",
-        });
-    }
-
-    const { email, tone } = req.query;
-    let query = 'SELECT * FROM responses WHERE tone = ? ORDER BY created_at DESC;';
+        //const { email, tone } = req.query;
+        let query = 'SELECT * FROM responses WHERE userid = ? ORDER BY created_at DESC;';
     //const values = [];
     //const conditions = [];
     
@@ -43,11 +43,14 @@ exports.get_history = async (req, res) => {
     }*/ //do we need?
     //query += ' ORDER BY created_at DESC';
     
-    try {
         //const [rows] = await pool.execute(query, values);
-        const rows = await query_database(emailresponder_db, query, [tone]);
-        //console.log(rows);
-        res.status(200).json({'history': rows});
+        const rows = await query_database(emailresponder_db, query, [user_id]);
+        console.log(rows);
+        //let history = rows[0];
+        //console.log(history);
+        res.json({
+            'reply': rows
+        });
 
     } catch (error) {
         console.log("**Error in /history:");

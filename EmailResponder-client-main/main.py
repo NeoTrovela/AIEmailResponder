@@ -337,6 +337,9 @@ def generate_response(baseurl):
             # failed:
             print("Failed with status code:", res.status_code)
             print("url: " + url)
+            if res.status_code in [400, 500]:  # we'll have an error message
+                body = res.json()
+                print("Error message:", body['reply'])
             return
         
         body = res.json()
@@ -400,16 +403,36 @@ def history(baseurl):
         url = baseurl + api + '/' + userid
 
         res = web_service_get(url)
+        #print('finished get')
 
         if res.status_code != 200:
             # failed:
             print("Failed with status code:", res.status_code)
             print("url: " + url)
+            if res.status_code in [400, 500]:  # we'll have an error message
+                body = res.json()
+                print("Error message:", body['reply'])
             return
         
         body = res.json()
+        #print(body)
 
-        response = body['history']
+        response = body['reply']
+        # figure out why I am not getting here
+        if response:
+            print("**History of Generations**")
+            for resp in response:
+               print()
+               print('response id:',resp['id'])
+               print('User email:',resp['email'])
+               print('User tone:',resp['tone'])
+               print('AI Response:',resp['response'])
+               print()
+            #print(response)
+        else:
+            print("**ERROR**")
+            print("Failed to generate response :(")
+
         return response
 
     except Exception as e:
