@@ -6,28 +6,47 @@ const { query_database } = require('./utility.js');
 // GET history
 //
 exports.get_history = async (req, res) => {
+    console.log("**Call to get /history/:userid...");
+
+    let user_id = req.params.userid;
+
+    let sql = `
+        SELECT * FROM users WHERE userid = ?;
+        `;
+
+    let sql_promise = query_database(emailresponder_db, sql, [user_id]);
+    let sql_result = await Promise.all([sql_promise]);
+
+    //console.log(sql_result);
+
+    if(sql_result[0].length === 0){ // invalid user id
+        return res.status(400).json({
+            "history": "No such user...",
+        });
+    }
+
     const { email, tone } = req.query;
-    let query = 'SELECT * FROM responses WHERE tone = ?';
-    const values = [];
-    const conditions = [];
+    let query = 'SELECT * FROM responses WHERE tone = ? ORDER BY created_at DESC;';
+    //const values = [];
+    //const conditions = [];
     
     /*if (email) {
         conditions.push(`email LIKE ?`);
         values.push(`%${email}%`);
-    }
-    if (tone) {
+    }*/
+    /*if (tone) {
         conditions.push(`tone = ?`);
         values.push(tone);
-    }
-    if (conditions.length > 0) {
+    }*/
+    /*if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
     }*/ //do we need?
-    query += ' ORDER BY created_at DESC';
+    //query += ' ORDER BY created_at DESC';
     
     try {
         //const [rows] = await pool.execute(query, values);
-        const [rows] = await query_database(emailresponder_db, query, values);
-        console.log(rows);
+        const rows = await query_database(emailresponder_db, query, [tone]);
+        //console.log(rows);
         res.status(200).json({'history': rows});
 
     } catch (error) {

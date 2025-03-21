@@ -249,10 +249,7 @@ def add_user(baseurl):
     first_name = input()
 
     #
-    # build the data packet:
-    #
-    # TODO
-    #
+    # build the data packet:    
     data = {
       "email": email,
       "lastname": last_name,
@@ -265,10 +262,6 @@ def add_user(baseurl):
     api = '/user'
     url = baseurl + api
     
-    #
-    # TODO
-    #
-    # res = requests.???(url, json=???)
     #
     res = web_service_put(url, data) # function to try request at least 3 times
     #res = requests.put(url, json=data)
@@ -323,8 +316,12 @@ def generate_response(baseurl):
     """
 
     try:
+        print("Enter user id>")
+        userid = input()
+
         print("Paste email content> ")
         email_text = input()
+
         print("Choose tone (formal, casual, apologetic, etc.)> ")
         tone = input().strip().lower()
 
@@ -332,7 +329,7 @@ def generate_response(baseurl):
 
         # calling webservice
         api = '/generate'
-        url = baseurl + api
+        url = baseurl + api + '/' + userid
 
         res = web_service_post(url, data)
 
@@ -344,9 +341,11 @@ def generate_response(baseurl):
         
         body = res.json()
 
+        responseid = body['responseid']
         response = body['reply']
 
         if response:
+            print('Response ID:', responseid)
             print("**AI Generated Response**")
             print(response)
         else:
@@ -390,11 +389,15 @@ def history(baseurl):
     """
 
     try:
+        print("Enter user id>")
+        userid = input()
+
+
         print("**Fetching email history**")
 
         # calling webservice
         api = '/history'
-        url = baseurl + api
+        url = baseurl + api + '/' + userid
 
         res = web_service_get(url)
 

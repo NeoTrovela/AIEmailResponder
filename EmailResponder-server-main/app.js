@@ -77,8 +77,8 @@ app.get('/', (req, res) => {
   }
 });
 
-app.post('/generate', generate.post_generation);
-app.get('/history', history.get_history);
+app.post('/generate/:userid', generate.post_generation);
+app.get('/history/:userid', history.get_history);
 app.put('/user', add_user.put_user);
 
 /*

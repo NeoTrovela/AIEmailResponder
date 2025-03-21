@@ -6,7 +6,25 @@ const { query_database } = require('./utility.js');
 // POST generation
 //
 exports.post_generation = async (req, res) => {
-    console.log("**Call to get /generate...");
+    console.log("**Call to get /generate/:userid...");
+
+    let user_id = req.params.userid;
+
+    let sql = `
+        SELECT * FROM users WHERE userid = ?;
+        `;
+
+    let sql_promise = query_database(emailresponder_db, sql, [user_id]);
+    let sql_result = await Promise.all([sql_promise]);
+
+    //console.log(sql_result);
+
+    if(sql_result[0].length === 0){ // invalid user id
+        return res.status(400).json({
+            "reply": "No such user...",
+            "responseid": -1
+        });
+    }
 
     const { content, tone } = req.body;
     //console.log(req.body);
@@ -34,7 +52,22 @@ exports.post_generation = async (req, res) => {
         //await pool.execute(insertQuery, [email, tone, responseText]);
         let insert_promise = await query_database(emailresponder_db, insertQuery, [content, tone, responseText]);
         
-        res.status(200).json({'reply': responseText});
+        /*res.status(200).json({
+            'reply': responseText,
+            'responseid': insert_promise.insertId
+        });*/
+        if (insert_promise.affectedRows === 1) {
+            res.json({
+                "reply": responseText,
+                "responseid": insert_promise.insertId
+            });
+          }
+          else{
+            res.status(500).json({
+                "reply": "insert database failed",
+                "responseid": -1
+            });
+          }
 
     } catch (error) {
         console.log("**Error in /generate:");
