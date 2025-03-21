@@ -15,3 +15,8 @@ We have 3 functions
 - add/update user -> must memorize your own userid in order to use the other functions 
 - generate -> generate response to an email using OpenAI API 
 - history -> look at history of past generations
+
+##########################
+Github:
+https://github.com/NeoTrovela/AIEmailResponder/tree/main
+Shared github repository with Ian Evensen and Neo Trovela-Villamiel
