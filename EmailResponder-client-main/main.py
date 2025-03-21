@@ -205,7 +205,8 @@ def prompt():
     print("   0 => end")
     print("   1 => generate response")
     print("   2 => get history")
-    print("   3 => add/update user")
+    print("   3 => search with tone")
+    print("   4 => add/update user")
 
     cmd = int(input())
     return cmd
@@ -379,16 +380,15 @@ def generate_response(baseurl):
 #
 def history(baseurl):
     """
-    Sends a request to OpenAI's API to generate an AI-powered email response.
+    Gets history of generations from a given user id
 
     Parameters
     ----------
-    email_text : The input email text (str)
-    tone : The desired tone of the response (formal, casual, apologetic, etc.) (str)
+    userid : Users user id (str)
 
     Returns
     -------
-    AI-generated email response (str)
+    All generations (object)
     """
 
     try:
@@ -431,7 +431,76 @@ def history(baseurl):
             #print(response)
         else:
             print("**ERROR**")
-            print("Failed to generate response :(")
+            print("Failed find history :(")
+
+        return response
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+    
+###################################################################
+#
+# get search
+#
+def search(baseurl):
+    """
+    Search for all past generations based on a tone
+
+    Parameters
+    ----------
+    userid : Users user id (str)
+    tone : The desired tone of the response (formal, casual, apologetic, etc.) (str)
+
+    Returns
+    -------
+    All responses with specified tone (object)
+    """
+
+    try:
+        print("Enter user id>")
+        userid = input()
+
+        print("Enter tone of emails you want to receive>")
+        tone = input()
+
+        print("**Fetching email history**")
+
+        # calling webservice
+        api = '/search'
+        url = baseurl + api + '/' + userid + '/' + tone
+        #print(url)
+
+        res = web_service_get(url)
+        #print('finished get')
+
+        if res.status_code != 200:
+            # failed:
+            print("Failed with status code:", res.status_code)
+            print("url: " + url)
+            if res.status_code in [400, 500]:  # we'll have an error message
+                body = res.json()
+                print("Error message:", body['reply'])
+            return
+        
+        body = res.json()
+        #print(body)
+
+        response = body['reply']
+        # figure out why I am not getting here
+        if response:
+            print("**Searched Responses**")
+            for resp in response:
+               print()
+               print('response id:',resp['id'])
+               print('User email:',resp['email'])
+               print('User tone:',resp['tone'])
+               print('AI Response:',resp['response'])
+               print()
+            #print(response)
+        else:
+            print("**ERROR**")
+            print("No responses found :(")
 
         return response
 
@@ -454,6 +523,8 @@ def main():
         elif cmd == 2:
             history(baseurl)
         elif cmd == 3:
+           search(baseurl)
+        elif cmd == 4:
            add_user(baseurl)
         else:
             print("** Unknown command, try again...")

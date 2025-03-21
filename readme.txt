@@ -15,6 +15,7 @@ We have 3 functions
 - add/update user -> must memorize your own userid in order to use the other functions 
 - generate -> generate response to an email using OpenAI API 
 - history -> look at history of past generations
+- search -> find past generations based on a given userid and a tone
 
 ##########################
 Github:
