@@ -45,7 +45,7 @@ exports.get_history = async (req, res) => {
     
         //const [rows] = await pool.execute(query, values);
         const rows = await query_database(emailresponder_db, query, [user_id]);
-        console.log(rows);
+        //console.log(rows);
         //let history = rows[0];
         //console.log(history);
         res.json({
