@@ -1,0 +1,26 @@
+
+DROP TABLE IF EXISTS responses;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users(
+    userid int not null AUTO_INCREMENT,
+    email varchar(128) not null,
+    lastname varchar(64) not null,
+    firstname varchar(64) not null,
+    PRIMARY KEY (userid),
+    UNIQUE (email)
+)
+
+CREATE TABLE responses(
+    id int not null AUTO_INCREMENT,
+    email text not null,
+    tone varchar(50) not null,
+    response text not null,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    userid int not null,
+    PRIMARY KEY (id),
+    FOREIGN KEY (userid) REFERENCES users(userid)
+)
+
+ALTER TABLE users AUTO_INCREMENT = 30001;
+ALTER TABLE responses AUTO_INCREMENT = 1001;
