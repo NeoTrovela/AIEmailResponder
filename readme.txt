@@ -7,6 +7,7 @@ In each folder, we also have two config ini files in each folder
 - For the client side, the only thing in the emailresponder-client-config.ini file is [client] with webserver=http://localhost:3000
 - For server side, we have information concerning our openapi key, as well as our rds information, which you can copy from our submission
 Follow the docker installation steps and run the server side to listen to the client
+For the database, we have a database file that has the SQL required to make the two tables we have. Our tables use MwSQL and is hosted on AWS RDS
 
 ##########################
 Usage:
