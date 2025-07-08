@@ -1,5 +1,6 @@
 # client side python app for AIEmailResponder
 # work with web service
+# run with `python3 main.py`
 
 import requests  # calling web service
 import jsons  # relational-object mapping

@@ -1,5 +1,6 @@
 // app.js: 
 // express server for ai email responder
+// run with `node app.js`
 
 const express = require('express');
 const bodyParser = require('body-parser');
