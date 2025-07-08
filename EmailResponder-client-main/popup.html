@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Email Responder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.5/babel.min.js"></script>
+  <style>
+    body {
+      width: 400px;
+      height: 600px;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    .nav-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .nav-tab {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #6b7280;
+      transition: all 0.3s ease;
+    }
+    
+    .nav-tab.active {
+      color: #4f46e5;
+      border-bottom: 2px solid #4f46e5;
+    }
+    
+    .nav-tab:hover {
+      color: #4f46e5;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #374151;
+      font-size: 14px;
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .response-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .response-box h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #4f46e5;
+    }
+    
+    .response-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #374151;
+      white-space: pre-wrap;
+    }
+    
+    .history-item {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    
+    .history-item .meta {
+      color: #6b7280;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+    
+    .history-item .response {
+      color: #374151;
+      line-height: 1.4;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #6b7280;
+      padding: 20px;
+    }
+    
+    .error {
+      color: #dc2626;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+    
+    .success {
+      color: #16a34a;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+    
+    .config-section {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .config-section h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #374151;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    
+    // Web service utility functions
+    const webServiceRequest = async (url, method = 'GET', data = null) => {
+      const maxRetries = 3;
+      let retries = 0;
+      
+      while (retries < maxRetries) {
+        try {
+          const options = {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          };
+          
+          if (data) {
+            options.body = JSON.stringify(data);
+          }
+          
+          const response = await fetch(url, options);
+          
+          if ([200, 400, 500].includes(response.status)) {
+            return response;
+          }
+          
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, retries * 1000));
+          }
+        } catch (error) {
+          retries++;
+          if (retries >= maxRetries) {
+            throw error;
+          }
+          await new Promise(resolve => setTimeout(resolve, retries * 1000));
+        }
+      }
+      
+      throw new Error('Max retries exceeded');
+    };
+    
+    const AIEmailResponder = () => {
+      const [activeTab, setActiveTab] = useState('generate');
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState('');
+      const [success, setSuccess] = useState('');
+      const [baseUrl, setBaseUrl] = useState('http://localhost:8080');
+      const [currentUserId, setCurrentUserId] = useState('');
+      
+      // Form states
+      const [emailContent, setEmailContent] = useState('');
+      const [tone, setTone] = useState('formal');
+      const [generatedResponse, setGeneratedResponse] = useState('');
+      const [responseId, setResponseId] = useState('');
+      
+      // User management
+      const [userEmail, setUserEmail] = useState('');
+      const [userFirstName, setUserFirstName] = useState('');
+      const [userLastName, setUserLastName] = useState('');
+      
+      // History and search
+      const [history, setHistory] = useState([]);
+      const [searchTone, setSearchTone] = useState('formal');
+      const [searchResults, setSearchResults] = useState([]);
+      
+      // Load settings on mount
+      useEffect(() => {
+        chrome.storage.sync.get(['baseUrl', 'currentUserId'], (result) => {
+          if (result.baseUrl) setBaseUrl(result.baseUrl);
+          if (result.currentUserId) setCurrentUserId(result.currentUserId);
+        });
+      }, []);
+      
+      // Save settings
+      const saveSettings = () => {
+        chrome.storage.sync.set({ baseUrl, currentUserId });
+        setSuccess('Settings saved successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      };
+      
+      // Generate response
+      const generateResponse = async () => {
+        if (!currentUserId || !emailContent || !tone) {
+          setError('Please fill in all required fields');
+          return;
+        }
+        
+        setLoading(true);
+        setError('');
+        setSuccess('');
+        
+        try {
+          const url = `${baseUrl}/generate/${currentUserId}`;
+          const data = { content: emailContent, tone };
+          
+          const response = await webServiceRequest(url, 'POST', data);
+          
+          if (response.status === 200) {
+            const result = await response.json();
+            setGeneratedResponse(result.reply);
+            setResponseId(result.responseid);
+            setSuccess('Response generated successfully!');
+          } else {
+            const result = await response.json();
+            setError(result.reply || 'Failed to generate response');
+          }
+        } catch (err) {
+          setError('Network error: ' + err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      // Add/update user
+      const addUser = async () => {
+        if (!userEmail || !userFirstName || !userLastName) {
+          setError('Please fill in all user fields');
+          return;
+        }
+        
+        setLoading(true);
+        setError('');
+        setSuccess('');
+        
+        try {
+          const url = `${baseUrl}/user`;
+          const data = {
+            email: userEmail,
+            firstname: userFirstName,
+            lastname: userLastName
+          };
+          
+          const response = await webServiceRequest(url, 'PUT', data);
+          
+          if (response.status === 200) {
+            const result = await response.json();
+            setCurrentUserId(result.user_id);
+            setSuccess(`User ${result.user_id} ${result.message}`);
+            chrome.storage.sync.set({ currentUserId: result.user_id });
+          } else {
+            const result = await response.json();
+            setError(result.message || 'Failed to add user');
+          }
+        } catch (err) {
+          setError('Network error: ' + err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      // Get history
+      const getHistory = async () => {
+        if (!currentUserId) {
+          setError('Please set a user ID first');
+          return;
+        }
+        
+        setLoading(true);
+        setError('');
+        
+        try {
+          const url = `${baseUrl}/history/${currentUserId}`;
+          const response = await webServiceRequest(url, 'GET');
+          
+          if (response.status === 200) {
+            const result = await response.json();
+            setHistory(result.reply || []);
+          } else {
+            const result = await response.json();
+            setError(result.reply || 'Failed to fetch history');
+          }
+        } catch (err) {
+          setError('Network error: ' + err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      // Search by tone
+      const searchByTone = async () => {
+        if (!currentUserId || !searchTone) {
+          setError('Please set a user ID and tone');
+          return;
+        }
+        
+        setLoading(true);
+        setError('');
+        
+        try {
+          const url = `${baseUrl}/search/${currentUserId}/${searchTone}`;
+          const response = await webServiceRequest(url, 'GET');
+          
+          if (response.status === 200) {
+            const result = await response.json();
+            setSearchResults(result.reply || []);
+          } else {
+            const result = await response.json();
+            setError(result.reply || 'No responses found');
+          }
+        } catch (err) {
+          setError('Network error: ' + err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      // Auto-load history when switching to history tab
+      useEffect(() => {
+        if (activeTab === 'history' && currentUserId) {
+          getHistory();
+        }
+      }, [activeTab, currentUserId]);
+      
+      const renderGenerate = () => (
+        <div>
+          <div className="form-group">
+            <label>Email Content:</label>
+            <textarea
+              value={emailContent}
+              onChange={(e) => setEmailContent(e.target.value)}
+              placeholder="Paste the email content here..."
+              rows="4"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Tone:</label>
+            <select value={tone} onChange={(e) => setTone(e.target.value)}>
+              <option value="formal">Formal</option>
+              <option value="casual">Casual</option>
+              <option value="apologetic">Apologetic</option>
+              <option value="friendly">Friendly</option>
+              <option value="professional">Professional</option>
+              <option value="polite">Polite</option>
+            </select>
+          </div>
+          
+          <button className="btn" onClick={generateResponse} disabled={loading}>
+            {loading ? 'Generating...' : 'Generate Response'}
+          </button>
+          
+          {generatedResponse && (
+            <div className="response-box">
+              <h3>Generated Response (ID: {responseId})</h3>
+              <div className="response-text">{generatedResponse}</div>
+            </div>
+          )}
+        </div>
+      );
+      
+      const renderHistory = () => (
+        <div>
+          <button className="btn" onClick={getHistory} disabled={loading}>
+            {loading ? 'Loading...' : 'Refresh History'}
+          </button>
+          
+          {history.length > 0 ? (
+            <div style={{ marginTop: '15px' }}>
+              {history.map((item, index) => (
+                <div key={index} className="history-item">
+                  <div className="meta">
+                    ID: {item.id} | Email: {item.email} | Tone: {item.tone}
+                  </div>
+                  <div className="response">{item.response}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="loading">No history found</div>
+          )}
+        </div>
+      );
+      
+      const renderSearch = () => (
+        <div>
+          <div className="form-group">
+            <label>Search by Tone:</label>
+            <select value={searchTone} onChange={(e) => setSearchTone(e.target.value)}>
+              <option value="formal">Formal</option>
+              <option value="casual">Casual</option>
+              <option value="apologetic">Apologetic</option>
+              <option value="friendly">Friendly</option>
+              <option value="professional">Professional</option>
+              <option value="polite">Polite</option>
+            </select>
+          </div>
+          
+          <button className="btn" onClick={searchByTone} disabled={loading}>
+            {loading ? 'Searching...' : 'Search'}
+          </button>
+          
+          {searchResults.length > 0 ? (
+            <div style={{ marginTop: '15px' }}>
+              {searchResults.map((item, index) => (
+                <div key={index} className="history-item">
+                  <div className="meta">
+                    ID: {item.id} | Email: {item.email} | Tone: {item.tone}
+                  </div>
+                  <div className="response">{item.response}</div>
+                </div>
+              ))}
+            </div>
+          ) : searchResults.length === 0 && !loading ? (
+            <div className="loading">No results found</div>
+          ) : null}
+        </div>
+      );
+      
+      const renderSettings = () => (
+        <div>
+          <div className="config-section">
+            <h3>Web Service Configuration</h3>
+            <div className="form-group">
+              <label>Base URL:</label>
+              <input
+                type="text"
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                placeholder="http://localhost:8080"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Current User ID:</label>
+              <input
+                type="text"
+                value={currentUserId}
+                onChange={(e) => setCurrentUserId(e.target.value)}
+                placeholder="Enter your user ID"
+              />
+            </div>
+            
+            <button className="btn" onClick={saveSettings}>
+              Save Settings
+            </button>
+          </div>
+          
+          <div className="config-section">
+            <h3>Add/Update User</h3>
+            <div className="form-group">
+              <label>Email:</label>
+              <input
+                type="email"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                placeholder="user@example.com"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>First Name:</label>
+              <input
+                type="text"
+                value={userFirstName}
+                onChange={(e) => setUserFirstName(e.target.value)}
+                placeholder="John"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Last Name:</label>
+              <input
+                type="text"
+                value={userLastName}
+                onChange={(e) => setUserLastName(e.target.value)}
+                placeholder="Doe"
+              />
+            </div>
+            
+            <button className="btn" onClick={addUser} disabled={loading}>
+              {loading ? 'Adding...' : 'Add/Update User'}
+            </button>
+          </div>
+        </div>
+      );
+      
+      return (
+        <div className="container">
+          <div className="header">
+            <h1>AI Email Responder</h1>
+          </div>
+          
+          <div className="content">
+            <div className="nav-tabs">
+              <button 
+                className={`nav-tab ${activeTab === 'generate' ? 'active' : ''}`}
+                onClick={() => setActiveTab('generate')}
+              >
+                Generate
+              </button>
+              <button 
+                className={`nav-tab ${activeTab === 'history' ? 'active' : ''}`}
+                onClick={() => setActiveTab('history')}
+              >
+                History
+              </button>
+              <button 
+                className={`nav-tab ${activeTab === 'search' ? 'active' : ''}`}
+                onClick={() => setActiveTab('search')}
+              >
+                Search
+              </button>
+              <button 
+                className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
+                onClick={() => setActiveTab('settings')}
+              >
+                Settings
+              </button>
+            </div>
+            
+            {error && <div className="error">{error}</div>}
+            {success && <div className="success">{success}</div>}
+            
+            {activeTab === 'generate' && renderGenerate()}
+            {activeTab === 'history' && renderHistory()}
+            {activeTab === 'search' && renderSearch()}
+            {activeTab === 'settings' && renderSettings()}
+          </div>
+        </div>
+      );
+    };
+    
+    ReactDOM.render(<AIEmailResponder />, document.getElementById('root'));
+  </script>
+</body>
+</html>

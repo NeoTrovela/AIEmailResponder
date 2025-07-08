@@ -1,4 +1,8 @@
 .env
 EmailResponder-server-main.zip
-web_server
+web_server/
+node_modules/
 .DS_Store
+.DS_Store?
+*.log
+logs/
